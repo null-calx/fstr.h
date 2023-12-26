@@ -1,0 +1,19 @@
+#+TITLE: fstr.h
+#+AUTHOR: calx
+
+A simple StringView implementation for C
+
+* Quickstart
+
+Just copy [[fstr.h]] into your project folder and include it using:
+
+#+BEGIN_SRC C
+  #define FSTR_IMPLEMENTATION
+  #include "./fstr.h"
+#+END_SRC
+
+* Resources
+
+- Tsoding's [[https://github.com/tsoding/sv][sv]]
+- Nothings' [[https://github.com/nothings/stb][stb]]
+- [[https://github.com/nothings/stb/blob/master/docs/stb_howto.txt][stb_howto.txt]]
