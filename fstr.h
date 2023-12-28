@@ -23,10 +23,6 @@
 #endif // FSTRDEF
 
 #include <stdbool.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/stat.h>
 
 typedef struct {
     size_t length;
@@ -46,13 +42,29 @@ typedef struct {
 //   printf("Name: "FSTR_FMT"\n", FSTR_ARG(name));
 
 FSTRDEF fstr fstr_from_parts(const char *start, size_t length);
+FSTRDEF fstr fstr_copy(const fstr fs);
+
 FSTRDEF fstr fstr_from_cstr(const char *cstr);
+FSTRDEF char *fstr_to_cstr(const fstr fs);
+
 FSTRDEF fstr fstr_from_fd(int fd);
 FSTRDEF void fstr_free(fstr fs);
+
+FSTRDEF fstr fstr_trim_left(const fstr fs);
+FSTRDEF fstr fstr_trim_right(const fstr fs);
+FSTRDEF fstr fstr_trim(const fstr fs);
+
+FSTRDEF fstr fstr_chop_by_delim(const fstr fs, char delim);
 
 #endif // FSTR_H_
 
 #ifdef FSTR_IMPLEMENTATION
+
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/stat.h>
 
 FSTRDEF fstr fstr_from_parts(const char *start, size_t length)
 {
@@ -62,9 +74,26 @@ FSTRDEF fstr fstr_from_parts(const char *start, size_t length)
     return fs;
 }
 
+FSTRDEF fstr fstr_copy(const fstr fs)
+{
+    return fstr_from_parts(fs.start, fs.length);
+}
+
 FSTRDEF fstr fstr_from_cstr(const char *cstr)
 {
     return fstr_from_parts(cstr, strlen(cstr));
+}
+
+FSTRDEF char *fstr_to_cstr(const fstr fs)
+{
+    // try allocating memory
+    char *start = (char *) malloc(fs.length + 1);
+
+    if (start != NULL) {
+	memcpy(start, fs.start, fs.length);
+	start[fs.length] = '\0';
+    }
+    return start;
 }
 
 FSTRDEF fstr fstr_from_fd(int fd)
@@ -98,6 +127,36 @@ FSTRDEF fstr fstr_from_fd(int fd)
 FSTRDEF void fstr_free(fstr fs)
 {
     free((void *) fs.start);
+}
+
+FSTRDEF fstr fstr_trim_left(const fstr fs)
+{
+    size_t i = 0;
+    while (i < fs.length && isspace(fs.start[i])) {
+	++ i;
+    }
+    return fstr_from_parts(fs.start + i, fs.length - i);
+}
+
+FSTRDEF fstr fstr_trim_right(const fstr fs) {
+    size_t i = 0;
+    while (i < fs.length && isspace(fs.start[fs.length - i - 1])) {
+	++ i;
+    }
+    return fstr_from_parts(fs.start, fs.length - i);
+}
+
+FSTRDEF fstr fstr_trim(const fstr fs) {
+    return fstr_trim_right(fstr_trim_left(fs));
+}
+
+FSTRDEF fstr fstr_chop_by_delim(const fstr fs, char delim)
+{
+    size_t i = 0;
+    while (i < fs.length && fs.start[i] != delim) {
+	++ i;
+    }
+    return fstr_from_parts(fs.start, i);
 }
 
 #endif // FSTR_IMPLEMENTATION
